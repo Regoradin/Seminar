@@ -95,6 +95,7 @@ def add_old():
 def edit():
         
     if request.forms.get('id') and not request.forms.get('save'):
+        #Actual editing page
         c.execute('SELECT id,title,description FROM seminars WHERE id LIKE ?', (request.forms.get('id')))
         seminar = c.fetchone()
         #This gets unpacked inside edit_seminar.tpl
@@ -102,6 +103,7 @@ def edit():
         return template('templates/edit_seminar.tpl', seminar = seminar, teacher_dropdown = teacher_dropdown()
     else:
         if request.forms.get('save'):
+            #Saves the edits to the seminars table
             id = request.forms.get('id')
             title = request.forms.get('title')
             description = request.forms.get('description')
@@ -109,9 +111,9 @@ def edit():
             c.execute('UPDATE seminars SET title = ?, description = ? WHERE id LIKE ?', (title, description, id))
             conn.commit()
 
-
+        #Edit select page: picks a seminar to edit
         c.execute("SELECT id,title FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester)")
-        result = c.fetchall()        
+        result = c.fetchall()
         
         return template('templates/edit_select.tpl', result = result)
         
