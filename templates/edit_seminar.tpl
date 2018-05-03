@@ -9,4 +9,5 @@
 	<input type="text" name="title" value={{title}}>
 	<input type="text" name="description" value={{description}}>
 	<input type="submit" name="save" value="save">
+	{{!teacher_dropdown}}
 </form>

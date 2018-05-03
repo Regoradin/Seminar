@@ -42,6 +42,23 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
 #c.execute('INSERT INTO teachers (name) VALUES ("Hyman"), ("Catlin"), ("Cristiano"), ("Tolias"), ("Person");')
 #conn.commit()
 
+
+def teacher_dropdown(selected_id = False):
+    #returns the HTML for a dropdown to select teachers
+    c.execute("SELECT id, name FROM teachers")
+    teachers = c.fetchall()
+    result = '<select name="teacher">'
+    for teacher in teachers:
+        if selected_id:
+            if teacher[0] == selected_id:
+                result+= "<option selected value=%s>%s</option>" % (teacher[0], teacher[1])
+        else:
+            result += "<option value=%s>%s</option>" % (teacher[0], teacher[1])
+
+    result += "</select>"
+    print(result)
+    return result
+
 @route('/teacher')
 def teacher_home():
     return template('templates/teacher_home.tpl')
@@ -68,7 +85,7 @@ def add_page():
 
     else:
         c.execute("SELECT id, name FROM teachers")
-        return template('templates/add_page.tpl', teachers = c.fetchall())
+        return template('templates/add_seminar.tpl', teacher_dropdown = teacher_dropdown())
 
 @route('/teacher/add_old', method = "POST")
 def add_old():
@@ -78,23 +95,22 @@ def add_old():
 def edit():
         
     if request.forms.get('id') and not request.forms.get('save'):
-        print(request.forms.get('id'))
         c.execute('SELECT id,title,description FROM seminars WHERE id LIKE ?', (request.forms.get('id')))
         seminar = c.fetchone()
         #This gets unpacked inside edit_seminar.tpl
         
-        return template('templates/edit_seminar.tpl', seminar = seminar)
+        return template('templates/edit_seminar.tpl', seminar = seminar, teacher_dropdown = teacher_dropdown()
     else:
         if request.forms.get('save'):
             id = request.forms.get('id')
             title = request.forms.get('title')
             description = request.forms.get('description')
 
-            c.execute('UPDATE seminars SET title = "?", description = "?" WHERE id LIKE ?', (title, description, id))
+            c.execute('UPDATE seminars SET title = ?, description = ? WHERE id LIKE ?', (title, description, id))
             conn.commit()
 
 
-        c.execute("SELECT id,title FROM seminars")
+        c.execute("SELECT id,title FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester)")
         result = c.fetchall()        
         
         return template('templates/edit_select.tpl', result = result)
