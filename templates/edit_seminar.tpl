@@ -9,5 +9,9 @@
 	<input type="text" name="title" value={{title}}>
 	<input type="text" name="description" value={{description}}>
 	<input type="submit" name="save" value="save">
-	{{!teacher_dropdown}}
+</form>
+
+<form action="edit/teachers" method="POST">
+	<input type="hidden" name="sems_id" value="{{sems_id}}">
+	<input type="submit" value="Edit Teachers">
 </form>

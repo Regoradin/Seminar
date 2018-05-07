@@ -1,7 +1,9 @@
-%for seminar in result:
-	%id = seminar[0]
-	%name = seminar[1]
+%for i in range(len(sems_ids)):
+	%id = sems_ids[i]
+	%name = seminars[i][0]
+
 	<form action="edit" method="POST">
-		<input type="hidden" name="id" value = "{{id}}">
+		<input type="hidden" name="sems_id" value = {{id}}>
 		<input type="submit" name= "sem_name" value = "{{name}}">
 	</form>
+%end
