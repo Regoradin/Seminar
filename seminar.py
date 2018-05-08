@@ -100,15 +100,15 @@ def edit():
         
         #This gets unpacked inside edit_seminar.tpl
 
-        return template('templates/edit_seminar.tpl', seminar = seminar, sems_id=request.forms.get('sems_id'))
+        return template('templates/edit_seminar.tpl', seminar = seminar, sems_id=request.forms.get('sems_id'),teacher_dropdown=teacher_dropdown())
     else:
         if request.forms.get('save'):
             #Saves the edits to the seminars table
-            id = request.forms.get('id')
+            sem_id = request.forms.get('sem_id')
             title = request.forms.get('title')
             description = request.forms.get('description')
 
-            c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, id))
+            c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
             conn.commit()
 
         #Edit select page: picks a seminar to edit of the seminar_semester pairs that are in the active semester
@@ -123,18 +123,6 @@ def edit():
         seminars = c.fetchall()
                   
         return template('templates/edit_select.tpl', sems_ids=sems_ids, seminars=seminars)
-
-@route('/teacher/edit/teachers', method = "POST")
-def edit_teacher():
-    if request.forms.get('teacher_id'):
-        #Remove a teacher
-        c.execute("DELETE FROM teacher_sems WHERE id
-    else:
-        sems_id = request.forms.get('sems_id')
-        c.execute("SELECT id, teacher_id FROM teacher_sems WHERE sems_id = ?",(sems_id))
-        teachers = c.fetchall()
-
-    return template('templates/edit_teachers.tpl', teachers=teachers, sems_id=sems_id)
     
 @route('/teacher/remove', method = "POST")
 def delete():
