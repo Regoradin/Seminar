@@ -83,7 +83,6 @@ def add_page():
         return "Added new"
 
     else:
-        c.execute("SELECT id, name FROM teachers")
         return template('templates/add_seminar.tpl', teacher_dropdown = teacher_dropdown())
 
 @route('/teacher/add_old', method = "POST")
@@ -99,8 +98,8 @@ def edit():
         seminar = c.fetchone()
         
         #This gets unpacked inside edit_seminar.tpl
-
-        return template('templates/edit_seminar.tpl', seminar = seminar, sems_id=request.forms.get('sems_id'),teacher_dropdown=teacher_dropdown())
+        
+        return template('templates/edit_seminar.tpl', seminar = seminar, teacher_dropdown = teacher_dropdown())
     else:
         if request.forms.get('save'):
             #Saves the edits to the seminars table
@@ -111,19 +110,12 @@ def edit():
             c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
             conn.commit()
 
-        #Edit select page: picks a seminar to edit of the seminar_semester pairs that are in the active semester
-        c.execute('''SELECT id, seminar_id, semester_id FROM seminar_semester WHERE semester_id IN (
-                    SELECT id FROM semesters WHERE is_current = 1)''')
-        results = c.fetchall()
-        sems_ids = []
-        for result in results:
-            sems_ids.append(result[0])
+        #Edit select page: picks a seminar to edit from the seminar table that is linked to the currently active semester
+        c.execute("SELECT id,title FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE semester_id IN(SELECT semester_id in semesters WHERE is_current = 1))")
+        result = c.fetchall()
 
-        c.execute("SELECT title FROM seminars WHERE id IN(SELECT seminar_id FROM seminar_semester WHERE id IN (" + ','.join(map(str, sems_ids)) + '))')
-        seminars = c.fetchall()
-                  
-        return template('templates/edit_select.tpl', sems_ids=sems_ids, seminars=seminars)
-    
+        return template('templates/edit_select.tpl', result = result)
+        
 @route('/teacher/remove', method = "POST")
 def delete():
     return "Remove Seminar"
