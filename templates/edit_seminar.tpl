@@ -2,6 +2,10 @@
 %title = seminar[1]
 %description = seminar[2]
 
+<script>
+  var teachers = {{!teachers}};
+</script>
+
 <p>Edit Seminar:</p>
 
 <form action="edit" method="POST" id="form">
@@ -12,10 +16,8 @@
 	
 </form>
 
-<button type="button" onclick="AddTeacher()">Add Teacher</button>
+<div id="teacher_select"></div>
 
-<script>
-function AddTeacher(){
-	document.getElementById("form").innerHTML += {{!teacher_dropdown}};
-}
-</script>
+<button type="button" onclick="AddTeacher(teachers)">Add Teacher</button>
+
+<script src="/js/scripts.js"></script>
