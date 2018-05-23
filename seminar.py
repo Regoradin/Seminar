@@ -85,7 +85,9 @@ def edit():
         
     if request.forms.get('sems_id') and not request.forms.get('save'):
         #Actual editing page
-        c.execute('SELECT id,title,description FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (request.forms.get('sems_id')))
+        sems_id = request.forms.get('sems_id')
+        
+        c.execute('SELECT id,title,description FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (sems_id))
         seminar = c.fetchone()
         
         #This gets unpacked inside edit_seminar.tpl
@@ -93,9 +95,12 @@ def edit():
 
         c.execute("SELECT id, name FROM teachers")
         teachers = json.dumps(c.fetchall())
-        print(teachers)
 
-        return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers)
+        c.execute("SELECT teacher_id FROM teacher_sems WHERE sems_id = ?", (sems_id))
+        selected_teachers = json.dumps(c.fetchall())
+        print("SELECTED TEAHCERS: " + selected_teachers)
+        
+        return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers)
     else:
         if request.forms.get('save'):
             #Saves the edits to the seminars table
@@ -104,6 +109,14 @@ def edit():
             description = request.forms.get('description')
 
             c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
+
+            #Resets links in the teacher_sems table
+            sems_id = request.forms.get('sems_id')
+            
+            c.execute("DELETE FROM teacher_sems WHERE sems_id = ?", (sems_id))
+            for teacher in request.forms.getall('teacher'):
+                c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
+
             conn.commit()
 
         #Edit select page: picks a seminar to edit from the seminar table that is linked to the currently active semester
@@ -136,4 +149,6 @@ def what():
 
     return template('make_table', rows = result)
 
-run(debug = True, reloader = True)
+#run(debug = True, reloader = True)
+#because for some reason the reloader doesn't work on my laptop because everything is terrible.
+run(debug =True)

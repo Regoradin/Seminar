@@ -2,3 +2,5 @@ Ways that teachers might make things miserable:
 -making exact copies of existing seminars through the add page.
  not really avoidable, but irritating.
 -editing currently active seminars that they are not teaching.
+
+If there are multiple offerings of a single seminar in the seminar_semester table with the current active year, the editing for teachers_sems will break
