@@ -98,7 +98,6 @@ def edit():
 
         c.execute("SELECT teacher_id FROM teacher_sems WHERE sems_id = ?", (sems_id))
         selected_teachers = json.dumps(c.fetchall())
-        print("SELECTED TEAHCERS: " + selected_teachers)
         
         return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers)
     else:
@@ -114,8 +113,11 @@ def edit():
             sems_id = request.forms.get('sems_id')
             
             c.execute("DELETE FROM teacher_sems WHERE sems_id = ?", (sems_id))
+            added_teachers = []
             for teacher in request.forms.getall('teacher'):
-                c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
+                if teacher not in added_teachers:
+                    added_teachers.append(teacher)
+                    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
 
             conn.commit()
 
