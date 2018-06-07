@@ -18,15 +18,21 @@
 	<input type="submit" name="save" value="save">
 
 	<div id="teacher_select"></div>
+	<div id="teacher_remove"></div>
 	
 </form>
 
 
 <button type="button" onclick="AddTeacher(teachers)">Add Teacher</button>
 
+<form action="edit" method="POST">
+	<input type="submit" value="Back">
+</form>
+
 <script src="/js/scripts.js"></script>
 <script>
   for (var i in selected_teachers){
     AddTeacher(teachers, selected_teachers[i][0]);
+    RemoveTeacher(teachers[i][0]);
   }
 </script>

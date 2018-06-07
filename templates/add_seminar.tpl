@@ -13,3 +13,7 @@
 	<div id="teacher_select"></div>
 </form>
 
+<form action = "/teacher">
+	<input type="submit" value="Back">
+</form>
+

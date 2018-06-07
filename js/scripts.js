@@ -8,6 +8,7 @@ function AddTeacher(teachers, selected_teacher = false){
     for (var i in teachers){
 	var option = document.createElement("option");
 	
+	option.id = teachers[i][0];
 	option.value = teachers[i][0];
 	option.text = teachers[i][1];
 	if(selected_teacher == teachers[i][0]){
@@ -16,4 +17,17 @@ function AddTeacher(teachers, selected_teacher = false){
 	select.appendChild(option);
     }
 	
+}
+function RemoveTeacher(teacher_id){
+    var div = document.getElementById("teacher_remove");
+    var remove = document.createElement("button");
+    div.appendChild(button);
+
+    button.onclick = function(){RemoveElement(teacher_id);}
+}
+
+function RemoveElement(id){
+    console.log("Removing");
+    var elem = document.getElementById(id);
+    elem.parentNode.removeChild(elem);
 }

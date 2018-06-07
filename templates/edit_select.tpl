@@ -7,3 +7,7 @@
 		<input type="submit" name= "sem_name" value = "{{name}}">
 	</form>
 %end
+
+<form action="/teacher" method="GET">
+	<input type="submit" value="Back">
+</form>
