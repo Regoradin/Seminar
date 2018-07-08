@@ -1,0 +1,10 @@
+var app = new Vue({
+    el:'#root',
+    data:{
+	message:'Vue Test'
+    },
+    delimiters: ["<%", "%>"]
+});
+
+Vue.options.delimiters = ["<%", "%>"];
+console.log("I'm actually runing");

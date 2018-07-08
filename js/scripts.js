@@ -21,13 +21,14 @@ function AddTeacher(teachers, selected_teacher = false){
 function RemoveTeacher(teacher_id){
     var div = document.getElementById("teacher_remove");
     var remove = document.createElement("button");
-    div.appendChild(button);
+    div.appendChild(remove);
 
-    button.onclick = function(){RemoveElement(teacher_id);}
+    remove.onclick = function(){RemoveElement(teacher_id);};
+    remove.innerHTML = "Remove";
 }
 
 function RemoveElement(id){
-    console.log("Removing");
+    console.log("Removing " + id);
     var elem = document.getElementById(id);
     elem.parentNode.removeChild(elem);
 }

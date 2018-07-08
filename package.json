@@ -1,0 +1,24 @@
+{
+  "name": "seminar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "vue.js",
+  "dependencies": {
+    "help": "^3.0.2",
+    "vue": "^2.5.16"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Regoradin/Seminar.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Regoradin/Seminar/issues"
+  },
+  "homepage": "https://github.com/Regoradin/Seminar#readme"
+}

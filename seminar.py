@@ -39,7 +39,6 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
 #c.execute("INSERT INTO semesters (name, is_current) VALUES ('Fall 2017', 0)")
 #c.execute("INSERT INTO semesters (name, is_current) VALUES ('Spring 2018', 1)")
 #conn.commit()
-
 #c.execute('INSERT INTO teachers (name) VALUES ("Hyman"), ("Catlin"), ("Cristiano"), ("Tolias"), ("Person");')
 #conn.commit()
 
@@ -96,8 +95,9 @@ def edit():
         c.execute("SELECT id, name FROM teachers")
         teachers = json.dumps(c.fetchall())
 
-        c.execute("SELECT teacher_id FROM teacher_sems WHERE sems_id = ?", (sems_id))
+        c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id))
         selected_teachers = json.dumps(c.fetchall())
+        print(teachers)
         
         return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers)
     else:
@@ -151,6 +151,6 @@ def what():
 
     return template('make_table', rows = result)
 
-#run(debug = True, reloader = True)
+run(debug = True, reloader = True)
 #because for some reason the reloader doesn't work on my laptop because everything is terrible.
-run(debug =True)
+#run(debug =True)
