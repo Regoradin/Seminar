@@ -55,6 +55,7 @@ def add_page():
     if request.forms.get('save'):
         title = request.forms.get('title')
         description = request.forms.get('description')
+        teacher = request.forms.get('teacher')
 
         c.execute("INSERT INTO seminars (title, description) VALUES (?, ?)",(title, description))
 
@@ -64,7 +65,7 @@ def add_page():
         c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?,?)", (seminar_id, semester_id))
         sems_id = c.lastrowid
 
-        c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (request.forms.get('teacher'), sems_id))
+        c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (teacher, sems_id))
         
         conn.commit()
         

@@ -27,6 +27,7 @@
   </form>
 
   <select ref="teacher_selector">
+    <option selected disabled hidden>Select a teacher</option>
     <option v-for="teacher in teachers" :value="teacher[0]"><{teacher[1]}></option>
   </select>
     
@@ -36,18 +37,8 @@
     <input type="submit" value="Back">
   </form>
 
-  <div> <{title}> </div>
-
 </div>
-<script src="/js/scripts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
-<script src="/js/vue_scripts.js"></script>
-<script>
-  for (var i in selected_teachers){
-//    AddTeacher(teachers, selected_teachers[i][0]);
-//    RemoveTeacher(selected_teachers[i][0]);
-  }
-</script>
 <script>
 var app = new Vue
 ({
