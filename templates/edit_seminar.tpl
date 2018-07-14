@@ -1,12 +1,13 @@
-
+<!doctype html>
+<html>
 %sem_id = seminar[0]
 %title = seminar[1]
 %description = seminar[2]
 
 <script>
-  var teachers = {{!teachers}};
+var teachers = {{!teachers}};
 
-  var selected_teachers = {{!selected_teachers}}
+var selected_teachers = {{!selected_teachers}}
 </script>
 
 <div id="root">
@@ -38,6 +39,7 @@
   </form>
 
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
 <script>
 var app = new Vue
@@ -75,6 +77,7 @@ var app = new Vue
 	}
     }
 });
- 
+
 
 </script>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <div id="root">
+    <p><{seminars}></p>
+  
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+  <script>
+
+    var app = new Vue
+    ({
+    el:'#root',
+    data:{
+    seminars:{{!seminars}},
+    removed_sems:[]
+    },
+    delimiters: ["<{", "}>"],
+      methods:{
+      RemoveSeminar:function(id){
+      }
+      }
+      });
+      
+  </script>
+
+</html>

@@ -1,5 +1,5 @@
 import sqlite3, json
-from bottle import route, run, debug, template, request, static_file
+from bottle import route, run, debug, template, request, static_file,redirect
 
 
 conn = sqlite3.connect('seminars.db')
@@ -76,9 +76,33 @@ def add_page():
         
         return template('templates/add_seminar.tpl', teachers=teachers)
 
-@route('/teacher/add_old', method = "POST")
+@route('/teacher/add_old', method = "GET")
 def add_old():
-    return "Add_old"
+    #selects seminars that were offered in previous semester but are NOT offered this semester
+    c.execute('''SELECT semi.id, semi.title, semi.description FROM seminars semi
+    INNER JOIN seminar_semester sems ON sems.seminar_id = semi.id
+    INNER JOIN semesters seme ON sems.semester_id = seme.id AND seme.is_current = 0
+    WHERE semi.id NOT IN(
+    SELECT semi.id FROM seminars semi
+    INNER JOIN seminar_semester sems ON sems.seminar_id = semi.id
+    INNER JOIN semesters seme ON sems.semester_id = seme.id AND seme.is_current = 1)''')
+
+    old_seminars=json.dumps(c.fetchall())
+    
+    return template('templates/add_old_seminar.tpl', old_seminars=old_seminars)
+@route('/teacher/add_old', method = "POST")
+def add_old_save():
+    new_sems_ids = request.forms.getall('added_sems')
+    c.execute("SELECT id FROM semesters WHERE is_current = 1")
+    semester_id = c.fetchone()[0]
+    print(semester_id)
+    for sem_id in new_sems_ids:
+        sem_id = int(sem_id)
+        print(sem_id)
+        c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?, ?)", (sem_id, semester_id))
+    conn.commit()
+
+    redirect("/teacher")
 
 @route('/teacher/edit', method = "POST")
 def edit():
@@ -131,10 +155,23 @@ def edit():
 
         return template('templates/edit_select.tpl', results = results)
         
-@route('/teacher/remove', method = "POST")
-def delete():
-    return "Remove Seminar"
-              
+@route('/teacher/remove', method="GET")
+def remove():
+    c.execute('''SELECT sems.id,  semi.title FROM seminar_semester sems
+        INNER JOIN seminars semi ON sems.seminar_id = semi.id
+        INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
+
+    seminars = json.dumps(c.fetchall())
+    
+    return template('templates/remove_seminar.tpl', seminars = seminars)
+@route('/teacher/remove', method="POST")
+def remove_submit():
+    for sems_id in request.forms.getall("removed"):
+        c.execute("DELETE FROM seminar_semester WHERE id = ?",(sems_id))
+    conn.commit()
+    redirect("/teacher")
+
+
 @route('/teacher/what')
 def what():
     c.execute("SELECT id, title, description FROM seminars")
