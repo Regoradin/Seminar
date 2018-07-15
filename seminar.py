@@ -9,7 +9,8 @@ c = conn.cursor()
 conn.execute('''CREATE TABLE IF NOT EXISTS seminars (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
-            description TEXT NOT NULL)''')
+            description TEXT NOT NULL,
+            session INTEGER NOT NULL CHECK(session = 1 OR session = 2 OR session = 3))''')
 #semesters table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS semesters (
              id INTEGER PRIMARY KEY,
@@ -50,31 +51,35 @@ def send_static(filename):
 def teacher_home():
     return template('templates/teacher_home.tpl')
 
+
+@route('/teacher/add', method="GET")
+def add_page():
+    c.execute("SELECT id, name FROM teachers")
+    teachers=json.dumps(c.fetchall())
+        
+    return template('templates/add_seminar.tpl', teachers=teachers)
+
 @route('/teacher/add', method="POST")
 def add_page():
-    if request.forms.get('save'):
-        title = request.forms.get('title')
-        description = request.forms.get('description')
-        teacher = request.forms.get('teacher')
+    title = request.forms.get('title')
+    description = request.forms.get('description')
+    teacher = request.forms.get('teacher')
+    session = request.forms.get('session')
+    
 
-        c.execute("INSERT INTO seminars (title, description) VALUES (?, ?)",(title, description))
+    c.execute("INSERT INTO seminars (title, description, session) VALUES (?, ?, ?)",(title, description, session))
 
-        seminar_id = c.lastrowid
-        c.execute("SELECT id FROM semesters WHERE is_current = 1")
-        semester_id = c.fetchone()[0]
-        c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?,?)", (seminar_id, semester_id))
-        sems_id = c.lastrowid
+    seminar_id = c.lastrowid
+    c.execute("SELECT id FROM semesters WHERE is_current = 1")
+    semester_id = c.fetchone()[0]
+    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?,?)", (seminar_id, semester_id))
+    sems_id = c.lastrowid
 
-        c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (teacher, sems_id))
+    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (teacher, sems_id))
         
-        conn.commit()
+    conn.commit()
         
-        return "Added new"
-    else:
-        c.execute("SELECT id, name FROM teachers")
-        teachers=json.dumps(c.fetchall())
-        
-        return template('templates/add_seminar.tpl', teachers=teachers)
+    redirect('/teacher')
 
 @route('/teacher/add_old', method = "GET")
 def add_old():
@@ -167,27 +172,12 @@ def remove():
 @route('/teacher/remove', method="POST")
 def remove_submit():
     for sems_id in request.forms.getall("removed"):
+        c.execute("DELETE FROM seminars WHERE id = (SELECT seminar_id FROM seminar_semester WHERE ID = ?)",(sems_id))
         c.execute("DELETE FROM seminar_semester WHERE id = ?",(sems_id))
+        
     conn.commit()
     redirect("/teacher")
 
-
-@route('/teacher/what')
-def what():
-    c.execute("SELECT id, title, description FROM seminars")
-    result = c.fetchall()
-    c.execute("SELECT id, name, is_current FROM semesters")
-    result += c.fetchall()
-    print(c.fetchall())
-
-    string_result = "Results:\n"
-    for row in result:
-        for word in row:
-            string_result += str(word)
-            string_result += " "
-
-
-    return template('make_table', rows = result)
 
 run(debug = True, reloader = True)
 #because for some reason the reloader doesn't work on my laptop because everything is terrible.

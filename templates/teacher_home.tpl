@@ -1,4 +1,4 @@
-<form action="teacher/add" method="POST">
+<form action="teacher/add" method="GET">
 	<input type="submit" value="Add a Seminar"/>
 </form>
 

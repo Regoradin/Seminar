@@ -27,7 +27,7 @@ var selected_teachers = {{!selected_teachers}}
     
   </form>
 
-  <select ref="teacher_selector">
+  <select ref="teacher_selector" required>
     <option selected disabled hidden>Select a teacher</option>
     <option v-for="teacher in teachers" :value="teacher[0]"><{teacher[1]}></option>
   </select>
@@ -42,41 +42,43 @@ var selected_teachers = {{!selected_teachers}}
 
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
 <script>
-var app = new Vue
-({
-    el:'#root',
-    data:{
-	title:"{{title}}",
-	description:"{{description}}",
-	selected_teachers:{{!selected_teachers}},
-	teachers:{{!teachers}}
-    },
-    delimiters: ["<{", "}>"],
-    
-    methods:{
-	AddTeacher:function(){
-	    var selected = app.$refs.teacher_selector;
-	    var teacher = [parseInt(selected.value), selected.options[selected.selectedIndex].text];
-	    var found = false;
-	    for (i=0; i< app.selected_teachers.length; i++){
-		if(app.selected_teachers[i][0] === teacher[0]){
-		    found = true;
-		}
-	    }
-	    if(!found){
-		app.selected_teachers.push(teacher);
-	    }
-	},
-	
-	RemoveTeacher:function(teacher){	   
-	    for (i=0; i< app.selected_teachers.length; i++){
-		if(app.selected_teachers[i] === teacher){
-		    app.selected_teachers.splice(i, 1);
-		}
-	    }
-	}
-    }
-});
+ var app = new Vue
+ ({
+     el:'#root',
+     data:{
+	 title:"{{title}}",
+	 description:"{{description}}",
+	 selected_teachers:{{!selected_teachers}},
+	 teachers:{{!teachers}}
+     },
+     delimiters: ["<{", "}>"],
+     
+     methods:{
+	 AddTeacher:function(){
+	     var selected = this.$refs.teacher_selector;
+	     if(!selected.options[selected.selectedIndex].disabled){
+		 var teacher = [parseInt(selected.value), selected.options[selected.selectedIndex].text];
+		 var found = false;
+		 for (i=0; i< app.selected_teachers.length; i++){
+		     if(app.selected_teachers[i][0] === teacher[0]){
+			 found = true;
+		     }
+		 }
+		 if(!found){
+		     app.selected_teachers.push(teacher);
+		 }
+	     }
+	 },
+	 
+	 RemoveTeacher:function(teacher){	   
+	     for (i=0; i< app.selected_teachers.length; i++){
+		 if(app.selected_teachers[i] === teacher){
+		     app.selected_teachers.splice(i, 1);
+		 }
+	     }
+	 }
+     }
+ });
 
 
 </script>
