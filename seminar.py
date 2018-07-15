@@ -36,6 +36,20 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
             FOREIGN KEY (teacher_id) REFERENCES teachers(id),
             FOREIGN KEY(sems_id) REFERENCES semester_seminar(id))''')
 
+#student table creation
+conn.execute('''CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL)''')
+
+#student_choices table creation
+conn.execute('''CREATE TABLE IF NOT EXISTS student_choices (
+             id INTEGER PRIMARY KEY,
+             student_id INTEGER NOT NULL,
+             sems_id INTEGER NOT NULL,
+             rank INTEGER NOT NULL,
+             FOREIGN KEY (student_id) REFERENCES students(id),
+             FOREIGN KEY (sems_id) REFERENCES seminar_semester(id))''')
+
 #Semester system will remain janky for now
 #c.execute("INSERT INTO semesters (name, is_current) VALUES ('Fall 2017', 0)")
 #c.execute("INSERT INTO semesters (name, is_current) VALUES ('Spring 2018', 1)")
@@ -43,14 +57,16 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
 #c.execute('INSERT INTO teachers (name) VALUES ("Hyman"), ("Catlin"), ("Cristiano"), ("Tolias"), ("Person");')
 #conn.commit()
 
+
 @route('/js/<filename:path>')
 def send_static(filename):
     return static_file(filename, root='js')
 
+#TEACHER SIDE
+
 @route('/teacher')
 def teacher_home():
     return template('templates/teacher_home.tpl')
-
 
 @route('/teacher/add', method="GET")
 def add_page():
@@ -178,6 +194,28 @@ def remove_submit():
     conn.commit()
     redirect("/teacher")
 
+#STUDENT SIDE
+
+@route('/student', method="GET")
+def student():
+
+    c.execute('''SELECT sems.id,  semi.title, semi.description, semi.session FROM seminar_semester sems
+        INNER JOIN seminars semi ON sems.seminar_id = semi.id
+        INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
+    seminars = json.dumps(c.fetchall())
+    
+    return template('templates/student_home.tpl', seminars = seminars)
+
+@route('/student/submit', method="POST")
+def submit():
+    student_id = request.forms.get("student_id")
+    chosen_seminars = request.forms.getall("chosen_seminars")
+
+    for i in range(0, len(chosen_seminars)):
+        c.execute("INSERT INTO student_choices (student_id, sems_id, rank) VALUES (?, ?, ?)", (student_id, chosen_seminars[i], i))
+
+    conn.commit()
+    return "Seminars chosen!"
 
 run(debug = True, reloader = True)
 #because for some reason the reloader doesn't work on my laptop because everything is terrible.

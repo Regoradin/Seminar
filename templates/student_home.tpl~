@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+    <div id="root" >
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script>
+     var app = new Vue
+     ({
+	 el:'#root',
+	 data:{
+	 },
+	 delimiters:["<{", "}>"]
+     })
+
+    </script>
+    
+</html>
