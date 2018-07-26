@@ -1,0 +1,17 @@
+class Seminar:
+
+    students = []
+    
+    def __init__(self, id, capacity):
+        self.id = id
+        self.capacity = capacity
+
+        self.students.append("Test")
+
+    def test():
+        print("students " + students[0])
+        print("id: " + str(id))
+        print("capacity: " + str(capacity))
+
+test_sem = Seminar(2, 3)
+test_sem.test()

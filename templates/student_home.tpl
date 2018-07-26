@@ -3,7 +3,7 @@
     <div id="root" >
 	<h3>Seminar List</h3>
 	<div v-for="(seminar, i) in seminars">
-	    <p><{seminar[1]}></p>
+	    <{seminar[1]}>
 	    <button v-on:click="ChooseSeminar(i)" >Pick Seminar</button>
 	</div>
 	<h3>Chosen Seminars</h3>
