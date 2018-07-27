@@ -1,4 +1,4 @@
-import random
+import random, sqlite3
 
 class Seminar:
     def __init__(self, id, capacity):
@@ -51,9 +51,15 @@ class Seminar:
         for student in self.students:
             print(student.id)
 class Student:
-    def __init__(self, id, rankings):
+    def __init__(self, id):
         self.id = id
-        self.rankings = rankings
+        self.rankings = []
+
+    def AddRanking(self, sems_id, ranking):
+        for i in range(0, len(self.rankings)):
+            if self.rankings[i][1] < ranking:
+                self.rankings.insert((sems_id, ranking))
+        
 
 def SortStudents(students, seminars):
     for student in students:
@@ -61,20 +67,65 @@ def SortStudents(students, seminars):
 
     for seminar in seminars:
         seminar.RemoveStudents()
+    #All seminars should now be at or under capacity and students should be properly sorted
+    conn.execute('''DROP TABLE assignments''')
+    conn.execute('''CREATE TABLE assignments(
+                 id INTEGER PRIMARY KEY,
+                 sems_id INTEGER NOT NULL,
+                 student_id INTEGER NOT NULL,
+                 FOREIGN KEY sems_id REFERENCES seminar_semester(id)
+                 FOREIGN KEY student_id REFERENCES students(id))''')
 
-        
-sem1 = Seminar(1, 0)
-sem2 = Seminar(2, 1)
-sem3 = Seminar(3, 2)
+    for seminar in all_seminars:
+        for student in seminar.students:
+            c.execute('''INSERT INTO assignments (sems_id, student_id) VALUES (?, ?)''',(seminar.id, student.id))
 
-stud1 = Student(1, [(sem2, 10), (sem1, 4)])
-stud2 = Student(2, [(sem2, 10), (sem1, 6), (sem3, 2)])
+    c.commit()
 
-all_seminars = [sem1, sem2, sem3]
 
-sem2.AddStudent(stud1)
-sem2.AddStudent(stud2)
+conn = sqlite3.connect('seminars.db')
+c = conn.cursor()
 
-sem1.PrintStudents()
-sem2.PrintStudents()
-sem3.PrintStudents()
+#Builds seminar items
+all_seminars = []
+c.execute('''SELECT sems.id, semi.capacity FROM seminar_semester sems
+           INNER JOIN seminars semi ON semi.id = sems.seminar_id
+           INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
+results = c.fetchall()
+for result in results:
+    new_seminar = Seminar(result[0], result[1])
+    all_seminars.append(new_seminar)
+    
+#Builds student items
+all_students = []
+created_ids = []
+c.execute('''SELECT student_id, rank, sems_id FROM student_choices''')
+results = c.fetchall()
+for result in results:
+    if result[0] not in created_ids:
+        student = Student(result[0])
+        all_students.append(student)
+        student.AddRanking((result[2], result[1]))
+    else:
+        for student in all_students:
+            if student.id = result[0]:
+                student.AddRanking((result[2], result[1]))
+                break
+
+SortStudents(all_students, all_seminars)
+
+# sem1 = Seminar(1, 0)
+# sem2 = Seminar(2, 1)
+# sem3 = Seminar(3, 2)
+
+# stud1 = Student(1, [(sem2, 10), (sem1, 4)])
+# stud2 = Student(2, [(sem2, 10), (sem1, 6), (sem3, 2)])
+
+# all_seminars = [sem1, sem2, sem3]
+
+# sem2.AddStudent(stud1)
+# sem2.AddStudent(stud2)
+
+# sem1.PrintStudents()
+# sem2.PrintStudents()
+# sem3.PrintStudents()
