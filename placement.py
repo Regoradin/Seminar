@@ -50,51 +50,58 @@ class Seminar:
         print("Students in seminar " + str(self.id))
         for student in self.students:
             print(student.id)
+
+
 class Student:
     def __init__(self, id):
         self.id = id
         self.rankings = []
 
-    def AddRanking(self, sems_id, ranking):
-        for i in range(0, len(self.rankings)):
-            if self.rankings[i][1] < ranking:
-                self.rankings.insert((sems_id, ranking))
+    def AddRanking(self, sem, ranking):
+        if len(self.rankings) == 0:
+            self.rankings.append((sem, ranking))
+        else:
+            for i in range(0, len(self.rankings)):
+                if self.rankings[i][1] < ranking:
+                    self.rankings.insert(i, (sem, ranking))
         
 
 def SortStudents(students, seminars):
     for student in students:
+        print("STUDENT RANKINGS")
+        print(student.rankings)
         student.rankings[0][0].AddStudent(student, False)
 
     for seminar in seminars:
         seminar.RemoveStudents()
     #All seminars should now be at or under capacity and students should be properly sorted
-    conn.execute('''DROP TABLE assignments''')
+    conn.execute('''DROP TABLE if exists assignments''')
     conn.execute('''CREATE TABLE assignments(
                  id INTEGER PRIMARY KEY,
                  sems_id INTEGER NOT NULL,
                  student_id INTEGER NOT NULL,
-                 FOREIGN KEY sems_id REFERENCES seminar_semester(id)
-                 FOREIGN KEY student_id REFERENCES students(id))''')
+                 FOREIGN KEY (sems_id) REFERENCES seminar_semester(id),
+                 FOREIGN KEY (student_id) REFERENCES students(id))''')
 
-    for seminar in all_seminars:
+    for seminar in all_seminars.values():
         for student in seminar.students:
             c.execute('''INSERT INTO assignments (sems_id, student_id) VALUES (?, ?)''',(seminar.id, student.id))
 
-    c.commit()
+    conn.commit()
 
 
 conn = sqlite3.connect('seminars.db')
 c = conn.cursor()
 
 #Builds seminar items
-all_seminars = []
+all_seminars = {}
 c.execute('''SELECT sems.id, semi.capacity FROM seminar_semester sems
            INNER JOIN seminars semi ON semi.id = sems.seminar_id
            INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
 results = c.fetchall()
 for result in results:
     new_seminar = Seminar(result[0], result[1])
-    all_seminars.append(new_seminar)
+    all_seminars[result[0]] = new_seminar
     
 #Builds student items
 all_students = []
@@ -102,17 +109,27 @@ created_ids = []
 c.execute('''SELECT student_id, rank, sems_id FROM student_choices''')
 results = c.fetchall()
 for result in results:
+    #matches sems_id to seminar object
+    seminar = all_seminars[result[2]]
+    
     if result[0] not in created_ids:
         student = Student(result[0])
         all_students.append(student)
-        student.AddRanking((result[2], result[1]))
+        created_ids.append(result[0])
+        student.AddRanking(seminar, result[1])
     else:
         for student in all_students:
-            if student.id = result[0]:
-                student.AddRanking((result[2], result[1]))
+            if student.id == result[0]:
+                student.AddRanking(seminar, result[1])
                 break
 
-SortStudents(all_students, all_seminars)
+print("Number of Students:")
+print(len(all_students))
+print("Created_ids:")
+for id in created_ids:
+    print(id)
+            
+SortStudents(all_students, all_seminars.values())
 
 # sem1 = Seminar(1, 0)
 # sem2 = Seminar(2, 1)

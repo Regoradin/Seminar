@@ -10,8 +10,10 @@ conn.execute('''CREATE TABLE IF NOT EXISTS seminars (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
-            session INTEGER NOT NULL CHECK(session = 1 OR session = 2 OR session = 3))
-            capacity INTEGER NOT NULL''')
+            session INTEGER NOT NULL,
+            capacity INTEGER NOT NULL,
+            CHECK(session = 1 OR session = 2 OR session = 3))''')
+            
 #semesters table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS semesters (
              id INTEGER PRIMARY KEY,
