@@ -42,7 +42,8 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
 #student table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL)''')
+            name TEXT NOT NULL,
+            grade INT NOT NULL CHECK(grade IN (1, 2, 3, 4))''')
 
 #student_choices table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS student_choices (

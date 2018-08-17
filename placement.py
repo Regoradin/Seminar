@@ -1,10 +1,11 @@
 import random, sqlite3
 
 class Seminar:
-    def __init__(self, id, capacity):
+    def __init__(self, id, capacity, session):
         self.id = id
         self.capacity = capacity
         self.students = []
+        self.session = session
 
     def AddStudent(self, student, keep_capacity = True):
         self.students.append(student)
@@ -15,35 +16,56 @@ class Seminar:
     def RemoveStudents(self):
         while len(self.students) > self.capacity:
             min_benefit = 100
-            min_student = ""
+            min_student = None
             for student in self.students:
-                for i in range(0,len(student.rankings)):
-                    if student.rankings[i][0] == self:
-                        #benefit is calculated as the weight assigned to this seminar - the next best seminar
+                if self.session == 1:
+                    rankings = student.first_rankings
+                if self.session == 2:
+                    rankings = student.second_rankings
+                for i in range(0,len(rankings)):
+                    if rankings[i][0] == self:
+                        #benefit is calculated as (the weight assigned to this seminar - the next best seminar)
                         found_next_best = False
-                        for j in range(i,len(student.rankings)):
-                            next_best_seminar = student.rankings[j][0]
+                        #Loops to the next highest ranked seminar with open seats
+                        for j in range(i,len(rankings)):
+                            next_best_seminar = rankings[j][0]
                             if next_best_seminar.capacity > len(next_best_seminar.students):
-                                benefit = student.rankings[i][1] - student.rankings[j][1]
+                                benefit = rankings[i][1] - rankings[j][1]
                                 found_next_best = True
+                        #If that doesn't exist, benefit is just the benefit of being in the current seminar
                         if not found_next_best:
-                            if student.rankings[-1][0] == self:
-                                benefit = student.rankings[-1][1]
-                            else:
-                                benefit = student.rankings[i][1]
-                        if benefit < min_benefit:
+                            benefit = rankings[i][1]
+                        #Minor bias towards upperclassmen here
+                        if benefit < min_benefit or (benefit == min_benefit and student.grade < min_student.grade):
                             min_benefit = benefit
                             min_student = student
                         break
-
+                    #only gets to here if this seminar isn't even on their list, in which case it's impossible to get benefit
+                    min_student = student
+                    min_benefit = 0
+                    
+            #Kicks the student out, and moves them to their highest ranked seminar with open seats
+            print("Capacity: " + str(self.capacity))
+            print("students: " + str(len(self.students)))
+            print("Min Student:")
+            print(min_student)
             self.students.remove(min_student)
             placed = False
-            for ranking in min_student.rankings:
+            if self.session == 1:
+                rankings = min_student.first_rankings
+            if self.session == 2:
+                rankings = min_student.second_rankings
+
+            for ranking in rankings:
                 if ranking[0].capacity > len(ranking[0].students):
                     ranking[0].AddStudent(min_student)
                     placed = True
             if not placed:
-                all_seminars[random.randint(0, len(all_seminars)-1)].AddStudent(min_student)
+                if self.session == 1:
+                    all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(min_student)
+                if self.session == 2:
+                    all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(min_student)
+
         return
             
     def PrintStudents(self):
@@ -53,24 +75,30 @@ class Seminar:
 
 
 class Student:
-    def __init__(self, id):
+    def __init__(self, id, grade):
         self.id = id
-        self.rankings = []
+        self.first_rankings = []
+        self.second_rankings = []
+        self.grade = grade
 
     def AddRanking(self, sem, ranking):
-        if len(self.rankings) == 0:
-            self.rankings.append((sem, ranking))
+        if sem.session == 1:
+            rankings = self.first_rankings
+        if sem.session == 2:
+            rankings = self.second_rankings
+        if len(rankings) == 0:
+            rankings.append((sem, ranking))
         else:
             for i in range(0, len(self.rankings)):
-                if self.rankings[i][1] < ranking:
-                    self.rankings.insert(i, (sem, ranking))
+                if rankings[i][1] < ranking:
+                    rankings.insert(i, (sem, ranking))
         
 
 def SortStudents(students, seminars):
+    #Adds all students into their first choice seminar
     for student in students:
-        print("STUDENT RANKINGS")
-        print(student.rankings)
-        student.rankings[0][0].AddStudent(student, False)
+        student.first_rankings[0][0].AddStudent(student, False)
+        student.second_rankings[0][0].AddStudent(student, False)
 
     for seminar in seminars:
         seminar.RemoveStudents()
@@ -83,7 +111,7 @@ def SortStudents(students, seminars):
                  FOREIGN KEY (sems_id) REFERENCES seminar_semester(id),
                  FOREIGN KEY (student_id) REFERENCES students(id))''')
 
-    for seminar in all_seminars.values():
+    for seminar in seminars:
         for student in seminar.students:
             c.execute('''INSERT INTO assignments (sems_id, student_id) VALUES (?, ?)''',(seminar.id, student.id))
 
@@ -94,26 +122,33 @@ conn = sqlite3.connect('seminars.db')
 c = conn.cursor()
 
 #Builds seminar items
-all_seminars = {}
-c.execute('''SELECT sems.id, semi.capacity FROM seminar_semester sems
+all_first_seminars = {}
+all_second_seminars = {}
+c.execute('''SELECT sems.id, semi.capacity, semi.session  FROM seminar_semester sems
            INNER JOIN seminars semi ON semi.id = sems.seminar_id
            INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
 results = c.fetchall()
 for result in results:
-    new_seminar = Seminar(result[0], result[1])
-    all_seminars[result[0]] = new_seminar
-    
+    new_seminar = Seminar(result[0], result[1], result[2])
+    if int(result[2]) == 1:
+        all_first_seminars[result[0]] = new_seminar
+    if int(result[2]) == 2:
+        all_second_seminars[result[0]] = new_seminar
+
+all_seminars = all_first_seminars
+all_seminars.update(all_second_seminars)
 #Builds student items
 all_students = []
 created_ids = []
-c.execute('''SELECT student_id, rank, sems_id FROM student_choices''')
+c.execute('''SELECT choices.student_id, choices.rank, choices.sems_id, students.grade FROM student_choices choices
+          INNER JOIN students students ON choices.student_id = students.id''')
 results = c.fetchall()
 for result in results:
     #matches sems_id to seminar object
     seminar = all_seminars[result[2]]
     
     if result[0] not in created_ids:
-        student = Student(result[0])
+        student = Student(result[0], int(result[3]))
         all_students.append(student)
         created_ids.append(result[0])
         student.AddRanking(seminar, result[1])
@@ -122,12 +157,6 @@ for result in results:
             if student.id == result[0]:
                 student.AddRanking(seminar, result[1])
                 break
-
-print("Number of Students:")
-print(len(all_students))
-print("Created_ids:")
-for id in created_ids:
-    print(id)
             
 SortStudents(all_students, all_seminars.values())
 
