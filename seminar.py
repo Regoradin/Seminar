@@ -43,7 +43,7 @@ conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
 conn.execute('''CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            grade INT NOT NULL CHECK(grade IN (1, 2, 3, 4))''')
+            grade INT NOT NULL CHECK(grade IN (1, 2, 3, 4)))''')
 
 #student_choices table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS student_choices (
@@ -213,10 +213,12 @@ def student():
 @route('/student/submit', method="POST")
 def submit():
     student_id = request.forms.get("student_id")
-    chosen_seminars = request.forms.getall("chosen_seminars")
-
-    for i in range(0, len(chosen_seminars)):
-        c.execute("INSERT INTO student_choices (student_id, sems_id, rank) VALUES (?, ?, ?)", (student_id, chosen_seminars[i], i))
+#    chosen_seminars = request.forms.getall("chosen_seminars")
+    for key, value in request.forms.items():
+        if key.startswith('seminar_'):
+            x, seminar_id = key.split("_")
+            if value != "0":
+                c.execute("INSERT INTO student_choices (student_id, sems_id, rank) VALUES (?, ?, ?)", (student_id, seminar_id, value))
 
     conn.commit()
     return "Seminars chosen!"
