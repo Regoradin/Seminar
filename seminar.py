@@ -63,8 +63,11 @@ conn.execute('''CREATE TABLE IF NOT EXISTS student_choices (
 
 
 @route('/js/<filename:path>')
-def send_static(filename):
+def send_js(filename):
     return static_file(filename, root='js')
+@route('/css/<filename:path>')
+def send_css(filename):
+    return static_file(filename, root='css')
 
 #TEACHER SIDE
 
@@ -129,7 +132,18 @@ def add_old_save():
 
     redirect("/teacher")
 
-@route('/teacher/edit', method = "POST")
+@route('/teacher/edit/select', method="GET")
+def edit_select():
+    #Edit select page: picks a seminar to edit from the seminar table that is linked to the currently active semester
+    c.execute('''SELECT sems.id,  semi.title FROM seminar_semester sems
+    INNER JOIN seminars semi ON sems.seminar_id = semi.id
+    INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
+        
+    results = c.fetchall()
+
+    return template('templates/edit_select.tpl', results = results)
+    
+@route('/teacher/edit/seminar', method = "POST")
 def edit():
         
     if request.forms.get('sems_id') and not request.forms.get('save'):
@@ -147,38 +161,31 @@ def edit():
 
         c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id))
         selected_teachers = json.dumps(c.fetchall())
-        print(teachers)
         
         return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers)
-    else:
-        if request.forms.get('save'):
-            #Saves the edits to the seminars table
-            sem_id = request.forms.get('sem_id')
-            title = request.forms.get('title')
-            description = request.forms.get('description')
 
-            c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
+@route('/teacher/edit/save', method="POST")
+def edit_save():
+    #Saves the edits to the seminars table
+    sem_id = request.forms.get('sem_id')
+    title = request.forms.get('title')
+    description = request.forms.get('description')
+    
+    c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
 
-            #Resets links in the teacher_sems table
-            sems_id = request.forms.get('sems_id')
+    #Resets links in the teacher_sems table
+    sems_id = request.forms.get('sems_id')
+    
+    c.execute("DELETE FROM teacher_sems WHERE sems_id = ?", (sems_id))
+    added_teachers = []
+    for teacher in request.forms.getall('teacher'):
+        if teacher not in added_teachers:
+            added_teachers.append(teacher)
+            c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
             
-            c.execute("DELETE FROM teacher_sems WHERE sems_id = ?", (sems_id))
-            added_teachers = []
-            for teacher in request.forms.getall('teacher'):
-                if teacher not in added_teachers:
-                    added_teachers.append(teacher)
-                    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
+        conn.commit()
+    redirect("/teacher/edit/select", code=303)
 
-            conn.commit()
-
-        #Edit select page: picks a seminar to edit from the seminar table that is linked to the currently active semester
-        c.execute('''SELECT sems.id,  semi.title FROM seminar_semester sems
-        INNER JOIN seminars semi ON sems.seminar_id = semi.id
-        INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
-        
-        results = c.fetchall()
-
-        return template('templates/edit_select.tpl', results = results)
         
 @route('/teacher/remove', method="GET")
 def remove():

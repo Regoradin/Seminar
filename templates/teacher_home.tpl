@@ -6,7 +6,7 @@
 	<input type="submit" value="Add an Old Seminar"/>
 </form>
 
-<form action="/teacher/edit" method="POST">
+<form action="/teacher/edit/select" method="GET">
 	<input type="submit" value="Edit a Seminar"/>
 </form>
 
