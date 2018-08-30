@@ -10,26 +10,41 @@ conn.execute('''CREATE TABLE IF NOT EXISTS seminars (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
-            session INTEGER NOT NULL,
+            first_day_note TEXT NOT NULL,
             capacity INTEGER NOT NULL,
-            CHECK(session = 1 OR session = 2 OR session = 3))''')
+            cost INTEGER NOT NULL,
+            sign_up INT NOT NULL DEFAULT 0 CHECK (sign_up IN (0, 1)),
+            no_random INT NOT NULL DEFAULT 0 CHECK(no_random IN (0, 1)))''')
             
 #semesters table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS semesters (
              id INTEGER PRIMARY KEY,
              name TEXT NOT NULL,
              is_current INTEGER NOT NULL CHECK(is_current IN (0,1)))''')
+
+#room table creation
+conn.execute('''CREATE TABLE IF NOT EXISTS rooms (
+             id INTEGER PRIMARY KEY,
+             name TEXT NOT NULL)''')
+
 #seminar_semester table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS seminar_semester (
             id INTEGER PRIMARY KEY,
             seminar_id INTEGER NOT NULL,
             semester_id INTEGER NOT NULL,
+            session INTEGER NOT NULL,
+            room_id INTEGER NOT NULL,
             FOREIGN KEY (semester_id) REFERENCES semesters(id),
-            FOREIGN KEY(seminar_id) REFERENCES seminars(id))''')
+            FOREIGN KEY(seminar_id) REFERENCES seminars(id),
+            FOREIGN KEY (room_id) REFERENCES rooms(id),
+            CHECK (session in (1, 2, 3)),
+            UNIQUE (semester_id, room_id, session))''')
+
 #teachers table creation
 conn.execute('''CREATE TABLE IF NOT EXISTS teachers (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL)''')
+
 #teacher_sems table creation
 conn.execute('''CREATE TABlE IF NOT EXISTS teacher_sems (
             id INTEGER PRIMARY KEY,
@@ -90,13 +105,13 @@ def add_page():
     session = request.forms.get('session')
     
 
-    c.execute("INSERT INTO seminars (title, description, session) VALUES (?, ?, ?)",(title, description, session))
+    c.execute("INSERT INTO seminars (title, description) VALUES (?, ?)",(title, description))
 
     seminar_id = c.lastrowid
     c.execute("SELECT id FROM semesters WHERE is_current = 1")
     semester_id = c.fetchone()[0]
-    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?,?)", (seminar_id, semester_id))
-    sems_id = c.lastrowid
+    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id, session) VALUES (?,?,?)", (seminar_id, semester_id, session))
+    Sems_id = c.lastrowid
 
     c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (teacher, sems_id))
         
