@@ -70,12 +70,18 @@ conn.execute('''CREATE TABLE IF NOT EXISTS student_choices (
              FOREIGN KEY (sems_id) REFERENCES seminar_semester(id))''')
 
 #Semester system will remain janky for now
-#c.execute("INSERT INTO semesters (name, is_current) VALUES ('Fall 2017', 0)")
-#c.execute("INSERT INTO semesters (name, is_current) VALUES ('Spring 2018', 1)")
-#conn.commit()
-#c.execute('INSERT INTO teachers (name) VALUES ("Hyman"), ("Catlin"), ("Cristiano"), ("Tolias"), ("Person");')
-#conn.commit()
+# c.execute("INSERT INTO semesters (name, is_current) VALUES ('Fall 2017', 0)")
+# c.execute("INSERT INTO semesters (name, is_current) VALUES ('Spring 2018', 1)")
+# c.execute('INSERT INTO teachers (name) VALUES ("Hyman"), ("Catlin"), ("Cristiano"), ("Tolias"), ("Person");')
+# c.execute('INSERT INTO rooms (name) VALUES ("101"), ("102"), ("103"), ("104"), ("105"), ("106"), ("107"), ("108"), ("109"), ("110"), ("111");')
+# conn.commit()
 
+
+def CheckboxToInt(input):
+    if input != None:
+        return 1
+    else:
+        return 0
 
 @route('/js/<filename:path>')
 def send_js(filename):
@@ -93,27 +99,35 @@ def teacher_home():
 @route('/teacher/add', method="GET")
 def add_page():
     c.execute("SELECT id, name FROM teachers")
-    teachers=json.dumps(c.fetchall())
+    teachers = json.dumps(c.fetchall())
+    c.execute("SELECT id, name FROM rooms")
+    rooms = json.dumps(c.fetchall())
         
-    return template('templates/add_seminar.tpl', teachers=teachers)
+    return template('templates/add_seminar.tpl', teachers=teachers, rooms=rooms)
 
 @route('/teacher/add', method="POST")
 def add_page():
     title = request.forms.get('title')
     description = request.forms.get('description')
     teacher = request.forms.get('teacher')
+    first_day_note = request.forms.get('first_day_note')
+    capacity = request.forms.get('capacity')
+    cost = request.forms.get('cost')
+    sign_up = CheckboxToInt(request.forms.get('sign_up'))
+    no_random = CheckboxToInt(request.forms.get('no_random'))
     session = request.forms.get('session')
-    
+    room_id = request.forms.get('room_id')
 
-    c.execute("INSERT INTO seminars (title, description) VALUES (?, ?)",(title, description))
+    
+    c.execute("INSERT INTO seminars (title, description, first_day_note, capacity, cost, sign_up, no_random) VALUES (?, ?, ?, ?, ?, ?, ?)",(title, description, first_day_note, capacity, cost, sign_up, no_random))
 
     seminar_id = c.lastrowid
     c.execute("SELECT id FROM semesters WHERE is_current = 1")
     semester_id = c.fetchone()[0]
-    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id, session) VALUES (?,?,?)", (seminar_id, semester_id, session))
-    Sems_id = c.lastrowid
+    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id, session, room_id) VALUES (?,?,?, ?)", (seminar_id, semester_id, session, room_id))
+    sems_id = c.lastrowid
 
-    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?,?)", (teacher, sems_id))
+    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id, is_primary) VALUES (?,?, 1)", (teacher, sems_id))
         
     conn.commit()
         
@@ -157,27 +171,31 @@ def edit_select():
     results = c.fetchall()
 
     return template('templates/edit_select.tpl', results = results)
-    
+
 @route('/teacher/edit/seminar', method = "POST")
 def edit():
-        
-    if request.forms.get('sems_id') and not request.forms.get('save'):
-        #Actual editing page
-        sems_id = request.forms.get('sems_id')
-        
-        c.execute('SELECT id,title,description FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (sems_id))
-        seminar = c.fetchone()
-        
-        #This gets unpacked inside edit_seminar.tpl
+    
+    #Actual editing page
+    sems_id = request.forms.get('sems_id')
 
+    #This gets unpacked inside edit_seminar.tpl    
+    c.execute('SELECT id, title, description, first_day_note, capacity, cost, sign_up, no_random FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (sems_id))
+    seminar = c.fetchone()
 
-        c.execute("SELECT id, name FROM teachers")
-        teachers = json.dumps(c.fetchall())
+    c.execute('SELECT room_id, session FROM seminar_semester WHERE id = ?', (sems_id))
+    result = c.fetchone()
+    room_id = result[0]
+    session = result[1]
+    c.execute('SELECT id, name FROM rooms')
+    all_rooms = json.dumps(c.fetchall())
 
-        c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id))
-        selected_teachers = json.dumps(c.fetchall())
+    c.execute("SELECT id, name FROM teachers")
+    teachers = json.dumps(c.fetchall())
+
+    c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id))
+    selected_teachers = json.dumps(c.fetchall())
         
-        return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers)
+    return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers, room_id = room_id, all_rooms = all_rooms, session = session)
 
 @route('/teacher/edit/save', method="POST")
 def edit_save():
@@ -185,8 +203,18 @@ def edit_save():
     sem_id = request.forms.get('sem_id')
     title = request.forms.get('title')
     description = request.forms.get('description')
+    first_day_note = request.forms.get('first_day_note')
+    capacity = request.forms.get('capacity')
+    cost = request.forms.get('cost')
+    sign_up = CheckboxToInt(request.forms.get('sign_up'))
+    no_random = CheckboxToInt(request.forms.get('no_random'))
+    session = request.forms.get('session')
+    room = request.forms.get('room')
+
+    print("SIGN UP: %s" %sign_up)
+    print("NO_RAND: %s" %no_random)
     
-    c.execute('UPDATE seminars SET title = ?, description = ? WHERE id = ?', (title, description, sem_id))
+    c.execute('UPDATE seminars SET title = ?, description = ?, capacity = ?, cost = ?, sign_up = ?, no_random = ? WHERE id = ?', (title, description, capacity, cost, sign_up, no_random, sem_id))
 
     #Resets links in the teacher_sems table
     sems_id = request.forms.get('sems_id')
@@ -196,9 +224,13 @@ def edit_save():
     for teacher in request.forms.getall('teacher'):
         if teacher not in added_teachers:
             added_teachers.append(teacher)
-            c.execute("INSERT INTO teacher_sems (teacher_id, sems_id) VALUES (?, ?)", (teacher, sems_id))
+            c.execute("INSERT INTO teacher_sems (teacher_id, sems_id, is_primary) VALUES (?, ?, 0)", (teacher, sems_id))
+
+    c.execute('UPDATE seminar_semester SET session = ?, room_id = ? WHERE id = ?', (session, room, sems_id))
             
-        conn.commit()
+    conn.commit()
+
+        
     redirect("/teacher/edit/select", code=303)
 
         

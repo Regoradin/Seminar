@@ -5,6 +5,11 @@
       %sem_id = seminar[0]
       %title = seminar[1]
       %description = seminar[2]
+      %first_day_note = seminar[3]
+      %capacity = seminar[4]
+      %cost = seminar[5]
+      %sign_up = seminar[6]
+      %no_random = seminar[7]
 
       <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
@@ -25,7 +30,7 @@
       <div id="root">
 	  <h1>Edit Seminar:</h1>
 
-	  <form action="/teacher/edit/save" method="POST" id="form">
+	  <form action="/teacher/edit/save" method="POST" id="form" v-on:submit.prevent>
 	      <input type="hidden" name="sems_id" value="{{sems_id}}">
 	      <input type="hidden" name="sem_id" value="{{sem_id}}">
 
@@ -36,12 +41,25 @@
 		  Describe your seminar descriptively
 	      </small>
 	      <textarea id="semDescription" name="description" style="width:100%" :value="description"></textarea>
-
+	      <label for="firstDay">First Day Note:</label>
+	      <textarea id="firstDay" name="first_day_note" :value="first_day_note"></textarea>
+	      <input type="number" name="capacity" :value="capacity" >
+	      <input type="number" name="cost" :value="cost" >
+	      <input type="checkbox" name="sign_up" :checked="sign_up" >
+	      <input type="checkbox" name="no_random" :checked="no_random">
+	      <select name="session" v-model="session" required>
+		  <option value="1" >First Session</option>
+		  <option value="2" >Second Session</option>
+		  <option value="3" >Double Session</option>
+	      </select>
+	      <select name="room" v-model="selected_room_id" required>
+		  <option v-for="room in all_rooms" :value="room[0]"><{room[1]}></option>
+	      </select>
 	      <div>
 		  <label for="assignedTeachers"> Assigned Teachers: </label>
 		  <span v-for="selected_t in selected_teachers" id="assignedTeachers">
 		      <input type="hidden" name="teacher" :value="selected_t[0]">
-		      <button class="btn btn-outline-primary" v-on:click="RemoveTeacher(selected_t)"><{selected_t[1]}><i class="fas fa-times" style="padding-left:10px"></i></button>
+		      <button class="btn btn-outline-primary" v-on:click="RemoveTeacher(selected_t)" ><{selected_t[1]}><i class="fas fa-times" style="padding-left:10px"></i></button>
 		  </span>
 	      </div>
 	  </form>
@@ -69,6 +87,14 @@
 	   data:{
 	       title:"{{title}}",
 	       description:"{{description}}",
+	       first_day_note:"{{first_day_note}}",
+	       capacity:{{capacity}},
+	       cost:{{cost}},
+	       sign_up:{{sign_up}},
+	       no_random:{{no_random}},
+	       selected_room_id:"{{room_id}}",
+	       all_rooms:{{!all_rooms}},
+	       session:"{{session}}",
 	       selected_teachers:{{!selected_teachers}},
 	       teachers:{{!teachers}}
 	   },
@@ -91,7 +117,8 @@
 		   }
 	       },
 	       
-	       RemoveTeacher:function(teacher){	   
+	       RemoveTeacher:function(teacher){
+		   console.log("REMOVING TEACHER");
 		   for (i=0; i< app.selected_teachers.length; i++){
 		       if(app.selected_teachers[i] === teacher){
 			   app.selected_teachers.splice(i, 1);

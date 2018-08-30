@@ -154,7 +154,7 @@ c = conn.cursor()
 all_first_seminars = {}
 all_second_seminars = {}
 all_double_seminars = {}
-c.execute('''SELECT sems.id, semi.capacity, semi.session  FROM seminar_semester sems
+c.execute('''SELECT sems.id, semi.capacity, sems.session  FROM seminar_semester sems
            INNER JOIN seminars semi ON semi.id = sems.seminar_id
            INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
 results = c.fetchall()
