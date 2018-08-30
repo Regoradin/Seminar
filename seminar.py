@@ -143,23 +143,25 @@ def add_old():
     SELECT semi.id FROM seminars semi
     INNER JOIN seminar_semester sems ON sems.seminar_id = semi.id
     INNER JOIN semesters seme ON sems.semester_id = seme.id AND seme.is_current = 1)''')
+    old_seminars = json.dumps(c.fetchall())
 
-    old_seminars=json.dumps(c.fetchall())
+    c.execute('''SELECT id, name FROM rooms''')
+    rooms = json.dumps(c.fetchall())
     
-    return template('templates/add_old_seminar.tpl', old_seminars=old_seminars)
+    return template('templates/add_old_seminar.tpl', old_seminars=old_seminars, rooms = rooms)
 @route('/teacher/add_old', method = "POST")
 def add_old_save():
-    new_sems_ids = request.forms.getall('added_sems')
+    sem_id = request.forms.get('sem_id')
+    session = request.forms.get('session')
+    room_id = request.forms.get('room_id')
+
     c.execute("SELECT id FROM semesters WHERE is_current = 1")
     semester_id = c.fetchone()[0]
-    print(semester_id)
-    for sem_id in new_sems_ids:
-        sem_id = int(sem_id)
-        print(sem_id)
-        c.execute("INSERT INTO seminar_semester (seminar_id, semester_id) VALUES (?, ?)", (sem_id, semester_id))
+    
+    c.execute("INSERT INTO seminar_semester (seminar_id, semester_id, session, room_id) VALUES (?, ?, ?, ?)", (sem_id, semester_id, session, room_id))
     conn.commit()
-
-    redirect("/teacher")
+    print("Adding old")
+    redirect("/teacher/add_old")
 
 @route('/teacher/edit/select', method="GET")
 def edit_select():
