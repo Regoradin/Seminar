@@ -45,16 +45,14 @@ class Seminar:
                     min_benefit = 0
                     
             #Kicks the student out, and moves them to their highest ranked seminar with open seats
-            print("Capacity: " + str(self.capacity))
-            print("students: " + str(len(self.students)))
-            print("Min Student:")
-            print(min_student)
             self.students.remove(min_student)
             placed = False
             if self.session == 1:
                 rankings = min_student.first_rankings
             if self.session == 2:
                 rankings = min_student.second_rankings
+            if self.session == 3:
+                rankings = min_student.double_rankings
 
             for ranking in rankings:
                 if ranking[0].capacity > len(ranking[0].students):
@@ -65,6 +63,9 @@ class Seminar:
                     all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(min_student)
                 if self.session == 2:
                     all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(min_student)
+                if self.session == 3:
+                    min_student.first_rankings[0][0].AddStudent(student)
+                    min_student.second_rankings[0][0].AddStudent(student)
 
         return
             
@@ -79,6 +80,7 @@ class Student:
         self.id = id
         self.first_rankings = []
         self.second_rankings = []
+        self.double_rankings = []
         self.grade = grade
 
     def AddRanking(self, sem, ranking):
@@ -86,6 +88,10 @@ class Student:
             rankings = self.first_rankings
         if sem.session == 2:
             rankings = self.second_rankings
+        if sem.session == 3:
+            rankings = self.double_rankings
+
+        #places the new ranking in the appropriate list in order
         if len(rankings) == 0:
             rankings.append((sem, ranking))
         else:
@@ -94,12 +100,27 @@ class Student:
                     rankings.insert(i, (sem, ranking))
         
 
-def SortStudents(students, seminars):
+def SortStudents(students, seminars, unranked_students):
     #Adds all students into their first choice seminar
     for student in students:
-        student.first_rankings[0][0].AddStudent(student, False)
-        student.second_rankings[0][0].AddStudent(student, False)
+        if len(student.double_rankings) != 0:
+            student.double_rankings[0][0].AddStudent(student, False)
+        else:
+            if len(student.first_rankings) != 0:
+                student.first_rankings[0][0].AddStudent(student, False)
+            else:
+                all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(student)
+            if len(student.second_rankings) != 0:
+                student.second_rankings[0][0].AddStudent(student, False)
+            else:
+                all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(student)
 
+
+    #Places students who did not make a selection into a random seminar
+    for student in unranked_students:
+        all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(student)
+        all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(student)
+            
     for seminar in seminars:
         seminar.RemoveStudents()
     #All seminars should now be at or under capacity and students should be properly sorted
@@ -124,6 +145,7 @@ c = conn.cursor()
 #Builds seminar items
 all_first_seminars = {}
 all_second_seminars = {}
+all_double_seminars = {}
 c.execute('''SELECT sems.id, semi.capacity, semi.session  FROM seminar_semester sems
            INNER JOIN seminars semi ON semi.id = sems.seminar_id
            INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
@@ -134,11 +156,14 @@ for result in results:
         all_first_seminars[result[0]] = new_seminar
     if int(result[2]) == 2:
         all_second_seminars[result[0]] = new_seminar
+    if int(result[2]) == 3:
+        all_double_seminars[result[0]] = new_seminar
 
 all_seminars = all_first_seminars
 all_seminars.update(all_second_seminars)
+all_seminars.update(all_double_seminars)
 #Builds student items
-all_students = []
+all_ranked_students = []
 created_ids = []
 c.execute('''SELECT choices.student_id, choices.rank, choices.sems_id, students.grade FROM student_choices choices
           INNER JOIN students students ON choices.student_id = students.id''')
@@ -149,16 +174,25 @@ for result in results:
     
     if result[0] not in created_ids:
         student = Student(result[0], int(result[3]))
-        all_students.append(student)
+        all_ranked_students.append(student)
         created_ids.append(result[0])
         student.AddRanking(seminar, result[1])
     else:
-        for student in all_students:
+        for student in all_ranked_students:
             if student.id == result[0]:
                 student.AddRanking(seminar, result[1])
                 break
-            
-SortStudents(all_students, all_seminars.values())
+
+#creating students who did not put a ranking
+all_unranked_students = []
+c.execute('''SELECT id,grade FROM students WHERE id NOT IN (SELECT student_id FROM student_choices)''')
+unranked_students = c.fetchall()
+for student in unranked_students:
+    print("UNRANKED: %s" % student[0])
+    new_student = Student(student[0], int(student[1]))
+    all_unranked_students.append(new_student)
+          
+SortStudents(all_ranked_students, all_seminars.values(), all_unranked_students)
 
 # sem1 = Seminar(1, 0)
 # sem2 = Seminar(2, 1)
