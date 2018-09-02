@@ -194,12 +194,12 @@ def edit():
     result = c.fetchone()
     room_id = result[0]
     session = result[1]
-    c.execute('''SELECT id, name FROM rooms WHERE id NOT IN(
+    c.execute('''SELECT id, name FROM rooms WHERE (id = ?) OR (id NOT IN(
                  SELECT room_id FROM seminar_semester semx
                  INNER JOIN semesters seme ON semx.semester_id = seme.id
-                 WHERE is_current = 1)''')
+                 WHERE is_current = 1))''', (room_id,))
     all_rooms = json.dumps(c.fetchall())
-
+    
     c.execute("SELECT id, name FROM teachers")
     teachers = json.dumps(c.fetchall())
 
@@ -270,10 +270,21 @@ def student():
 
     c.execute('''SELECT sems.id,  semi.title, semi.description, sems.session FROM seminar_semester sems
         INNER JOIN seminars semi ON sems.seminar_id = semi.id
-        INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
-    seminars = json.dumps(c.fetchall())
+        INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1 and semi.sign_up = 0''')
+    seminars = c.fetchall()
+
+    first_seminars = []
+    second_seminars = []
+    double_seminars = []
+    for seminar in seminars:
+        if seminar[3] == 1:
+            first_seminars.append(seminar)
+        if seminar[3] == 2:
+            second_seminars.append(seminar)
+        if seminar[3] == 3:
+            double_seminars.append(seminar)
     
-    return template('templates/student_home.tpl', seminars = seminars)
+    return template('templates/student_home.tpl', first_seminars = json.dumps(first_seminars), second_seminars = json.dumps(second_seminars), double_seminars = json.dumps(double_seminars))
 
 @route('/student/submit', method="POST")
 def submit():
