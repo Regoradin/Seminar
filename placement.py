@@ -1,11 +1,12 @@
 import random, sqlite3
 
 class Seminar:
-    def __init__(self, id, capacity, session):
+    def __init__(self, id, capacity, session, no_random):
         self.id = id
         self.capacity = capacity
         self.students = []
         self.session = session
+        self.no_random = no_random
 
     def AddStudent(self, student, keep_capacity = True):
         self.students.append(student)
@@ -60,9 +61,9 @@ class Seminar:
                     placed = True
             if not placed:
                 if self.session == 1:
-                    all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(min_student)
+                    PlaceRandomly(all_first_seminars, student)
                 if self.session == 2:
-                    all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(min_student)
+                    PlaceRandomly(all_second_seminars, student)
                 if self.session == 3:
                     min_student.first_rankings[0][0].AddStudent(student)
                     min_student.second_rankings[0][0].AddStudent(student)
@@ -99,7 +100,12 @@ class Student:
                 if rankings[i][1] < ranking:
                     rankings.insert(i, (sem, ranking))
         
-
+def PlaceRandomly(seminars, student):
+    seminar = seminars.values()[random.randint(0, len(all_seminars.values())-1)]
+    while seminar.no_random == True:
+        seminar = seminars.values()[random.randint(0, len(all_seminars.values())-1)]
+    seminar.AddStudent(student)
+                    
 def SortStudents(students, seminars, unranked_students):
     total_students = len(students) + len(unranked_students)
     seminar_slots = 0
@@ -117,18 +123,17 @@ def SortStudents(students, seminars, unranked_students):
             if len(student.first_rankings) != 0:
                 student.first_rankings[0][0].AddStudent(student, False)
             else:
-                all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(student)
+                PlaceRandomly(all_first_seminars, student)
             if len(student.second_rankings) != 0:
                 student.second_rankings[0][0].AddStudent(student, False)
             else:
-                all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(student)
-
+                PlaceRandomly(all_second_seminars, student)
 
     #Places students who did not make a selection into a random seminar
     for student in unranked_students:
-        all_first_seminars.values()[random.randint(0, len(all_first_seminars.values())-1)].AddStudent(student)
-        all_second_seminars.values()[random.randint(0, len(all_second_seminars.values())-1)].AddStudent(student)
-            
+        PlaceRandomly(all_first_seminars, student)
+        PlaceRandomly(all_second_seminars, student)
+
     for seminar in seminars:
         seminar.RemoveStudents()
     #All seminars should now be at or under capacity and students should be properly sorted
@@ -154,12 +159,14 @@ c = conn.cursor()
 all_first_seminars = {}
 all_second_seminars = {}
 all_double_seminars = {}
-c.execute('''SELECT sems.id, semi.capacity, sems.session  FROM seminar_semester sems
+c.execute('''SELECT sems.id, semi.capacity, sems.session, semi.sign_up, semi.no_random  FROM seminar_semester sems
            INNER JOIN seminars semi ON semi.id = sems.seminar_id
            INNER JOIN semesters seme ON seme.id = sems.semester_id WHERE seme.is_current = 1''')
 results = c.fetchall()
 for result in results:
-    new_seminar = Seminar(result[0], result[1], result[2])
+    if result[3] == 1 or result[4] == 1:
+        no_random = True
+    new_seminar = Seminar(result[0], result[1], result[2], no_random)
     if int(result[2]) == 1:
         all_first_seminars[result[0]] = new_seminar
     if int(result[2]) == 2:

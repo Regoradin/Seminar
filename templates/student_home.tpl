@@ -38,25 +38,6 @@
 		 if(event.target.value === "0"){
 		     delete this.rankings[seminar];
 		 }
-	     },
-	     ChooseSeminar:function(i)
-	     {
-		 if(this.chosen_seminars.length < 5){
-		     this.chosen_seminars.push(this.seminars[i]);
-		     this.seminars.splice(i, 1);
-		 }
-	     },
-	     UnchooseSeminar:function(i)
-	     {
-		 this.seminars.push(this.chosen_seminars[i]);
-		 this.chosen_seminars.splice(i, 1);
-	     },
-	     CheckSubmit:function(e)
-	     {
-		 if(this.chosen_seminars.length === 5){
-		     return true;
-		 }
-		 e.preventDefault();
 	     }
 	 }
      })

@@ -100,7 +100,10 @@ def teacher_home():
 def add_page():
     c.execute("SELECT id, name FROM teachers")
     teachers = json.dumps(c.fetchall())
-    c.execute("SELECT id, name FROM rooms")
+    c.execute('''SELECT id, name FROM rooms WHERE id NOT IN(
+                 SELECT room_id FROM seminar_semester semx
+                 INNER JOIN semesters seme ON semx.semester_id = seme.id
+                 WHERE is_current = 1)''')
     rooms = json.dumps(c.fetchall())
         
     return template('templates/add_seminar.tpl', teachers=teachers, rooms=rooms)
@@ -145,7 +148,10 @@ def add_old():
     INNER JOIN semesters seme ON sems.semester_id = seme.id AND seme.is_current = 1)''')
     old_seminars = json.dumps(c.fetchall())
 
-    c.execute('''SELECT id, name FROM rooms''')
+    c.execute('''SELECT id, name FROM rooms WHERE id NOT IN(
+                 SELECT room_id FROM seminar_semester semx
+                 INNER JOIN semesters seme ON semx.semester_id = seme.id
+                 WHERE is_current = 1)''')
     rooms = json.dumps(c.fetchall())
     
     return template('templates/add_old_seminar.tpl', old_seminars=old_seminars, rooms = rooms)
@@ -188,7 +194,10 @@ def edit():
     result = c.fetchone()
     room_id = result[0]
     session = result[1]
-    c.execute('SELECT id, name FROM rooms')
+    c.execute('''SELECT id, name FROM rooms WHERE id NOT IN(
+                 SELECT room_id FROM seminar_semester semx
+                 INNER JOIN semesters seme ON semx.semester_id = seme.id
+                 WHERE is_current = 1)''')
     all_rooms = json.dumps(c.fetchall())
 
     c.execute("SELECT id, name FROM teachers")
@@ -259,7 +268,7 @@ def remove_submit():
 @route('/student', method="GET")
 def student():
 
-    c.execute('''SELECT sems.id,  semi.title, semi.description, semi.session FROM seminar_semester sems
+    c.execute('''SELECT sems.id,  semi.title, semi.description, sems.session FROM seminar_semester sems
         INNER JOIN seminars semi ON sems.seminar_id = semi.id
         INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
     seminars = json.dumps(c.fetchall())
