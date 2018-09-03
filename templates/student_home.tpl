@@ -5,23 +5,26 @@
 
 	<form action="student/submit" method="POST" @submit.prevent id="form">
 	    <h3>Seminar List</h3>
+
+	    <h4>Double Period</h4>
+	    <p>Remaining Points: <{remaining_points[2]}></p>
+	    <div v-for="(seminar, i) in double_seminars">
+		<{seminar[1]}>
+		<input type="number" class="double_period"  :name="'seminar_' + seminar[0]" value="0" min="0" v-on:change="UpdateRanking($event, seminar); CheckValue($event, 3);">
+	    </div>
+	  
 	    <h4>First Session</h4>
 	    <p>Remaining Points: <{remaining_points[0]}></p>
 	    <div v-for="(seminar, i) in first_seminars">
 		<{seminar[1]}>
 		<input type="number" class="first_session"  :name="'seminar_' + seminar[0]" value="0" min="0" v-on:change="UpdateRanking($event, seminar); CheckValue($event, 1);">
 	    </div>
+
 	    <h4>Second Session</h4>
 	    <p>Remaining Points: <{remaining_points[1]}></p>
 	    <div v-for="(seminar, i) in second_seminars">
 		<{seminar[1]}>
 		<input type="number" class="second_session"  :name="'seminar_' + seminar[0]" value="0" min="0" v-on:change="UpdateRanking($event, seminar); CheckValue($event, 2);">
-	    </div>
-	    <h4>Double Period</h4>
-	    <p>Remaining Points: <{remaining_points[2]}></p>
-	    <div v-for="(seminar, i) in double_seminars">
-		<{seminar[1]}>
-		<input type="number" class="double_period"  :name="'seminar_' + seminar[0]" value="0" min="0" v-on:change="UpdateRanking($event, seminar); CheckValue($event, 3);">
 	    </div>
 	    
 	    <input type="text" name ="student_id" value="Student ID" required>
@@ -82,7 +85,7 @@
 		 
 		 if(spent_points > this.max_points[session]){
 		     event.target.value = this.max_points[session] - spent_points + parseInt(event.target.value);
-		     Vue.set(this.remaining_points, session, 0);
+		     //Vue.set(this.remaining_points, session, 0);
 		 }
 
 	     }
