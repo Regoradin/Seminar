@@ -36,23 +36,41 @@
 
 	      <label for="semTitle">Seminar Title:</label>
 	      <input type="text" id="semTitle" name="title" :value="title">
-	      <label for="semDescription">Seminar Description:</label>
-	      <small id="descHelpText" class="form-text text-muted">
-		  Describe your seminar descriptively
-	      </small>
-	      <textarea id="semDescription" name="description" style="width:100%" :value="description"></textarea>
+	      <div>
+		  <label for="semDescription">Seminar Description:</label>
+		  <textarea id="semDescription" name="description" style="width:100%" :value="description"></textarea>
+	      </div>
 	      <label for="firstDay">First Day Note:</label>
+	      <small class="form-text text-muted" >
+		  This will be given to students before their first seminar.
+	      </small>
 	      <textarea id="firstDay" name="first_day_note" :value="first_day_note"></textarea>
-	      <input type="number" name="capacity" :value="capacity" >
-	      <input type="number" name="cost" :value="cost" >
-	      <input type="checkbox" name="sign_up" :checked="sign_up" >
-	      <input type="checkbox" name="no_random" :checked="no_random">
-	      <select name="session" v-model="session" required>
+	      <label for="capacity">Capacity:</label>
+	      <input id="capacity" type="number" name="capacity" :value="capacity" >
+	      <label for="cost">Cost:</label>
+	      <input id="cost" type="number" name="cost" :value="cost" >
+	      <div>
+		  <label for="sign_up" >Sign Up Only:</label>
+		  <input id="sign_up" type="checkbox" name="sign_up" :checked="sign_up" >
+		  <small class="form-text text-muted" >
+		      If this is checked, students will not be able to choose this seminar, and must be pulled in by you.
+		  </small>
+	      </div>
+	      <div>
+		  <label for="no_random" >Prevent Random Assignment:</label>
+		  <input id="no_random" type="checkbox" name="no_random" :checked="no_random">
+		  <small class="form-text text-muted" >
+		      If this is checked, only students who actively ranked this seminar will be assigned to it. Otherwise, students may be randomly assigned to it
+		  </small>
+	      </div>
+	      <label for="session" >Session:</label>
+	      <select id="session" name="session" v-model="session" required>
 		  <option value="1" >First Session</option>
 		  <option value="2" >Second Session</option>
 		  <option value="3" >Double Session</option>
 	      </select>
-	      <select name="room" v-model="selected_room_id" required>
+	      <label for="room" >Room:</label>
+	      <select id="room" name="room" v-model="selected_room_id" required>
 		  <option v-for="room in all_rooms" :value="room[0]"><{room[1]}></option>
 	      </select>
 	      <div>

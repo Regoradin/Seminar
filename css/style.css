@@ -13,9 +13,17 @@
 }
 
 label{
-    display:block;
+   /* display:block;*/
     margin-top:10px;
     margin-bottom:5px;
+}
+
+textarea{
+    display:block;
+}
+
+input{
+    margin:3px;
 }
 
 .navFooter{

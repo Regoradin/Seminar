@@ -176,7 +176,7 @@ def edit_select():
     INNER JOIN seminars semi ON sems.seminar_id = semi.id
     INNER JOIN semesters seme ON sems.semester_id = seme.id WHERE seme.is_current =1''')
         
-    results = c.fetchall()
+    results = json.dumps(c.fetchall())
 
     return template('templates/edit_select.tpl', results = results)
 
