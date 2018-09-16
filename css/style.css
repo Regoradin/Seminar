@@ -33,3 +33,14 @@ input{
     padding:10px;
     background:#53a4db;
 }
+
+.semTitle{
+    font-size:1.5rem;
+}
+
+.sessionBox{
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background:#53a4db;
+}

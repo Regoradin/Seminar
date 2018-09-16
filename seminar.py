@@ -112,7 +112,7 @@ def add_page():
 def add_page():
     title = request.forms.get('title')
     description = request.forms.get('description')
-    teacher = request.forms.get('teacher')
+    teachers = request.forms.getall('teacher')
     first_day_note = request.forms.get('first_day_note')
     capacity = request.forms.get('capacity')
     cost = request.forms.get('cost')
@@ -130,7 +130,8 @@ def add_page():
     c.execute("INSERT INTO seminar_semester (seminar_id, semester_id, session, room_id) VALUES (?,?,?, ?)", (seminar_id, semester_id, session, room_id))
     sems_id = c.lastrowid
 
-    c.execute("INSERT INTO teacher_sems (teacher_id, sems_id, is_primary) VALUES (?,?, 1)", (teacher, sems_id))
+    for teacher in teachers:
+        c.execute("INSERT INTO teacher_sems (teacher_id, sems_id, is_primary) VALUES (?,?, 1)", (teacher, sems_id))
         
     conn.commit()
         
@@ -185,12 +186,12 @@ def edit():
     
     #Actual editing page
     sems_id = request.forms.get('sems_id')
-
+    print("SEMS ID: %s" %sems_id)
     #This gets unpacked inside edit_seminar.tpl    
-    c.execute('SELECT id, title, description, first_day_note, capacity, cost, sign_up, no_random FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (sems_id))
+    c.execute('SELECT id, title, description, first_day_note, capacity, cost, sign_up, no_random FROM seminars WHERE id IN (SELECT seminar_id FROM seminar_semester WHERE id = ?)', (sems_id,))
     seminar = c.fetchone()
 
-    c.execute('SELECT room_id, session FROM seminar_semester WHERE id = ?', (sems_id))
+    c.execute('SELECT room_id, session FROM seminar_semester WHERE id = ?', (sems_id,))
     result = c.fetchone()
     room_id = result[0]
     session = result[1]
@@ -203,7 +204,7 @@ def edit():
     c.execute("SELECT id, name FROM teachers")
     teachers = json.dumps(c.fetchall())
 
-    c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id))
+    c.execute("SELECT teacher_id, name FROM teacher_sems INNER JOIN teachers ON teacher_sems.teacher_id = teachers.id WHERE sems_id = ?", (sems_id,))
     selected_teachers = json.dumps(c.fetchall())
         
     return template('templates/edit_seminar.tpl', seminar = seminar, teachers=teachers, sems_id = sems_id, selected_teachers = selected_teachers, room_id = room_id, all_rooms = all_rooms, session = session)

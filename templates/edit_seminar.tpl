@@ -44,7 +44,7 @@
 	      <small class="form-text text-muted" >
 		  This will be given to students before their first seminar.
 	      </small>
-	      <textarea id="firstDay" name="first_day_note" :value="first_day_note"></textarea>
+	      <textarea id="firstDay" name="first_day_note" style="width:100%" :value="first_day_note"></textarea>
 	      <label for="capacity">Capacity:</label>
 	      <input id="capacity" type="number" name="capacity" :value="capacity" >
 	      <label for="cost">Cost:</label>
@@ -136,7 +136,6 @@
 	       },
 	       
 	       RemoveTeacher:function(teacher){
-		   console.log("REMOVING TEACHER");
 		   for (i=0; i< app.selected_teachers.length; i++){
 		       if(app.selected_teachers[i] === teacher){
 			   app.selected_teachers.splice(i, 1);
